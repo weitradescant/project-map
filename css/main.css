@@ -1,0 +1,10 @@
+body,html,#container {
+	height: 100%;
+	margin: 0px;
+}
+
+#list {
+	width: 400px;
+	height: 100%;
+	float: left;
+}
