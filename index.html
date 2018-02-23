@@ -10,15 +10,21 @@
  </head>
  <body>
  	<aside id="list">
+ 		<input id="picker" placeholder="输入关键字选取地点">
+ 		<input type="button" id="shaixuan" value="筛选">
+ 		<hr>
  		<input data-bind="" type="button" id="showall" value="显示所有标记">
  		<input data-bind="" type="button" id="hideall" value="隐藏所有标记">
- 		<div>list</div>
+ 		<ul data-bind="foreach: lbx">
+ 			<li data-bind="text: title"></li>
+ 		</ul>
  	</aside>
  	<div id="container"></div>
 
 	<script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
 	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.4.2/knockout-min.js"></script>
 	<script type="text/javascript" src="http://webapi.amap.com/maps?v=1.4.4&key=22197708df30b23a9631ef14cab27c06"></script>
+	<script src="http://webapi.amap.com/ui/1.0/main.js"></script>
 	<script src="script/app.js" type="text/javascript"></script>
  </body>
 </html>

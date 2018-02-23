@@ -1,36 +1,9 @@
 $(function(){
-	init()
-/*
-	AMap.plugin(['AMap.ToolBar','AMap.AdvancedInfoWindow'],function(){
-    //创建并添加工具条控件
-	    var toolBar = new AMap.ToolBar();
-	    map.addControl(toolBar);
-	    //创建高级信息窗体并在指定位置打开
-	    var infowindow = new AMap.AdvancedInfoWindow({
-	      content: '<div class="info-title">高德地图</div><div class="info-content">'+
-	            '<img src="http://webapi.amap.com/images/amap.jpg">'+
-	            '高德是中国领先的数字地图内容、导航和位置服务解决方案提供商。<br></div>',
-	      offset: new AMap.Pixel(0, -30)
-	    });
-	    infowindow.open(map,[121.49972, 31.23969]);
-	})
-	*/
+	init();
 });
 
-function init() {   //载入高德地图
-	const map = new AMap.Map("container",{
-		resizeEnable: true,
-		zoom: 16,
-		center: [121.499809,31.239666]  //东方明珠坐标
-	}); 
-
-	map.plugin(["AMap.ToolBar"], function() {  //工具条
-		map.addControl(new AMap.ToolBar());
-	});
-
-	let markers = [];
-	let infowindow = new AMap.InfoWindow();
-	const locations = [
+function init() {
+	const locations = [   //坐标
 		{title: "东方明珠", location: [121.499809,31.239666]},				
 		{title: "上海海洋水族馆", location: [121.50195,31.240747]},
 		{title: "外滩", location: [121.490602,31.237767]},
@@ -42,6 +15,22 @@ function init() {   //载入高德地图
 		{title: "味千拉面", location: [121.501126,31.239667]},
 		{title: "避风塘", location: [121.498857,31.236374]},		
 	];
+
+	const map = new AMap.Map("container",{    //载入高德地图
+		resizeEnable: true,
+		zoom: 16,
+		center: [121.499809,31.239666]  //东方明珠坐标
+	}); 
+
+	map.plugin(["AMap.ToolBar"], function() {  //工具条
+		map.addControl(new AMap.ToolBar());
+	});
+	map.on("click",cancelall);
+	let markers = [];     //添加标记
+	let infowindow = new AMap.InfoWindow();    //信息窗口
+
+
+
 	for (let i = 0; i < locations.length; i++) {  //添加标记
 		let marker = new AMap.Marker({
 			position: locations[i].location,
@@ -49,19 +38,87 @@ function init() {   //载入高德地图
 			title: locations[i].title
 		});
 		markers.push(marker);
-		marker.content = "这里是" + locations[i].title;;
+		marker.content = "这里是" + locations[i].title;;   //信息窗口的信息
 		marker.setAnimation('AMAP_ANIMATION_DROP');  //掉落效果
 		marker.on("click",markerClick);    //监听标记事件
 	};
-	
-
-	function markerClick(e) {   //点击出现弹窗介绍
-		infowindow.setContent(e.target.content);
-		infowindow.open(map,e.target.getPosition());
-	};
-
 	$("#showall").click(showall);
 	$("#hideall").click(hideall);
+	poipicker();
+
+
+	function poipicker() {
+		AMapUI.loadUI(['misc/PoiPicker'], function(PoiPicker) {
+
+	        var poiPicker = new PoiPicker({
+	            city:'上海',
+	            input: 'picker'
+	        });
+
+	        //初始化poiPicker
+	        poiPickerReady(poiPicker);
+    	});
+
+	    function poiPickerReady(poiPicker) {
+
+	        window.poiPicker = poiPicker;
+
+	        let marker = new AMap.Marker();
+
+	        let infoWindow = new AMap.InfoWindow({
+	            offset: new AMap.Pixel(0, -20)
+	        });
+
+	        //选取了某个POI
+	        poiPicker.on('poiPicked', function(poiResult) {
+
+	            const source = poiResult.source,
+	                poi = poiResult.item,
+	                info = {
+	                    source: source,
+	                    id: poi.id,
+	                    name: poi.name,
+	                    location: poi.location.toString(),
+	                    address: poi.address
+	                };
+
+	            marker.setMap(map);
+	            infoWindow.setMap(map);
+
+	            marker.setPosition(poi.location);
+	            infoWindow.setPosition(poi.location);
+	            markers.push(marker);
+
+	            infoWindow.setContent('POI信息: <pre>' + JSON.stringify(info, null, 2) + '</pre>');
+	            infoWindow.open(map, marker.getPosition());
+
+	            //map.setCenter(marker.getPosition());
+	        });
+
+	        poiPicker.onCityReady(function() {
+	            poiPicker.suggest('游玩');
+	        });
+	    }
+	};
+
+
+	function markerClick(e) {   //点击标记事件
+		cancelall();
+		infowindow.setContent(e.target.content);
+		infowindow.open(map,e.target.getPosition());
+		this.setAnimation('AMAP_ANIMATION_BOUNCE');
+	};
+
+	function cancelall() {  //取消所有标记效果  应用于点击其他标签或地图时
+		for (const marker of markers) {
+			marker.setAnimation('AMAP_ANIMATION_NONE');  //取消动画
+			infowindow.close();    //关闭弹窗
+		};
+	}
+
+
+
+
 	function showall() {    //显示所有标记
 		for (let i = 0; i < markers.length; i++) {
 			markers[i].setMap(map);
@@ -78,18 +135,79 @@ function init() {   //载入高德地图
 	function extend() {   //自适应标记全屏地图
 		map.setFitView();
 	};
+
+
+
+	const ViewModel = function() {
+		const that = this;
+		this.lbx = ko.observableArray([]);  //定义列表项数组
+		locations.forEach(function(data) {
+			that.lbx.push(data);
+		})
+
+		//this.currentList = ko.observable(new List({}));
+	};
+
+	const List = function() {   //model;
+		//this.listname = ko.observableArray(['1','2'])
+	};
+
+	ko.applyBindings(new ViewModel());
 };
 
-const ViewModel = function() {
-	3
-};
 
-const Views = function() {
-	2
-};
 
-const Model = function() {
-	1
-};
+/*
+	function poipicker() {
+		AMapUI.loadUI(['misc/PoiPicker'], function(PoiPicker) {
 
-ko.applyBindings(new ViewModel());
+	        var poiPicker = new PoiPicker({
+	            city:'上海',
+	            input: 'picker'
+	        });
+
+	        //初始化poiPicker
+	        poiPickerReady(poiPicker);
+    	});
+
+	    function poiPickerReady(poiPicker) {
+
+	        window.poiPicker = poiPicker;
+
+	        let marker = new AMap.Marker();
+
+	        let infoWindow = new AMap.InfoWindow({
+	            offset: new AMap.Pixel(0, -20)
+	        });
+
+	        //选取了某个POI
+	        poiPicker.on('poiPicked', function(poiResult) {
+
+	            const source = poiResult.source,
+	                poi = poiResult.item,
+	                info = {
+	                    source: source,
+	                    id: poi.id,
+	                    name: poi.name,
+	                    location: poi.location.toString(),
+	                    address: poi.address
+	                };
+
+	            marker.setMap(map);
+	            infoWindow.setMap(map);
+
+	            marker.setPosition(poi.location);
+	            infoWindow.setPosition(poi.location);
+
+	            infoWindow.setContent('POI信息: <pre>' + JSON.stringify(info, null, 2) + '</pre>');
+	            infoWindow.open(map, marker.getPosition());
+
+	            //map.setCenter(marker.getPosition());
+	        });
+
+	        poiPicker.onCityReady(function() {
+	            poiPicker.suggest('游玩');
+	        });
+	    }
+	}
+*/
