@@ -1,9 +1,42 @@
 $(function(){
-	init();
+	let success = 0;
+	$.ajax({
+		url: "https://cdnjs.cloudflare.com/ajax/libs/knockout/3.4.2/knockout-min.js",  //异步加载KO
+		dataType: "script"
+	}).done(ifstart)
+	.fail(function() {
+		alert("加载knockoutJS失败");
+	});
+
+	$.ajax({
+		url: "http://webapi.amap.com/maps?v=1.4.4&key=22197708df30b23a9631ef14cab27c06", //异步加载高德地图
+		dataType: "script"		
+	}).done(ifstart)
+	.fail(function() {
+		alert("加载高德地图失败");
+	});
+
+	$.ajax({
+		url: "http://webapi.amap.com/ui/1.0/main-async.js", //异步加载高德UI库API
+		dataType: "script"		
+	}).done(ifstart)
+	.fail(function() {
+		alert("加载高德UI库失败");
+	});
+
+	function ifstart() {
+		if (success === 2) {   //已加载完三个 开始执行
+			init();	
+		} else {
+			console.log("还剩" + (2 - success));//测试用
+			success++;
+		};
+	};
 });
 
 function init() {
-		let initial = 0;  //计数 第一次
+	initAMapUI(); //调用initAMapUI初始化
+	let initial = 0;  //计数 第一次
 	let locations = [   //默认自定义的坐标数据
 		{title: "东方明珠", location: [121.499809,31.239666], address: "世纪大道1号(近二号线陆家嘴站)"},				
 		{title: "上海海洋水族馆", location: [121.50195,31.240747], address: "陆家嘴环路1388号"},
@@ -31,13 +64,11 @@ function init() {
 		closeWhenClickMap: true
 	});    //信息窗口
 
-
-
-
 	const ViewModel = function() {                 //knockout
 		var that = this;
 		that.locationlist = ko.observableArray(locations);  //定义列表项数组
 		that.listclick = function(clickedlist) {
+			console.log(this);
 			for (let i = 0; i < locations.length; i++) {
 				if (locations[i] === clickedlist) {
 					nmarkerClick(markers[i]);
@@ -51,10 +82,8 @@ function init() {
 		};
 		that.removeall = function() {
 			that.locationlist.removeAll();
-		}
-
+		};
 	};
-
 
 	function poipicker() {    //高德输入框选择api
 		AMapUI.loadUI(['misc/PoiPicker'], function(PoiPicker) {
@@ -62,7 +91,6 @@ function init() {
 				city:'上海',
 				input: 'picker'
 			});
-
 			//初始化poiPicker
 			poiPickerReady(poiPicker);
 		});
@@ -81,10 +109,6 @@ function init() {
 				//console.log(locations);      //验证添加是没问题的
 				resetmarkers();
 				nmarkerClick(markers[markers.length-1]);
-			});
-
-			poiPicker.onCityReady(function() {
-				poiPicker.suggest('陆家嘴');
 			});
 		};
 	};
@@ -108,7 +132,7 @@ function init() {
 			marker.setAnimation('AMAP_ANIMATION_NONE');  //取消动画
 			infowindow.close();    //关闭弹窗
 		};
-	}
+	};
 
 	function resetmarkers() {
 		clearall();  //直接清空所有标记
@@ -140,12 +164,12 @@ function init() {
 		map.setFitView();
 	};
 
-	function one() {   //初始化时执行一次的动作
+	function once() {   //初始化时执行一次的动作
 		$("#clearall").click(clearall); 
 		poipicker();
 		resetmarkers();
 	};
 
-	one();
+	once();
 	ko.applyBindings(new ViewModel());
 };
