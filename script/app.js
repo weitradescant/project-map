@@ -26,6 +26,7 @@ $(function(){
 
 	function ifstart() {
 		if (success === 2) {   //已加载完三个 开始执行
+			console.log("加载完成")
 			init();	
 		} else {
 			console.log("还剩" + (2 - success));//测试用
@@ -60,12 +61,13 @@ function init() {
 		map.addControl(new AMap.ToolBar());
 	});
 	let markers = [];     //添加标记
-	let infowindow = new AMap.InfoWindow({
+	const infowindow = new AMap.InfoWindow({
 		closeWhenClickMap: true
 	});    //信息窗口
 
 	const ViewModel = function() {                 //knockout
-		var that = this;
+		const that = this;
+		that.query = ko.observable("");              //筛选框里输入的值
 		that.locationlist = ko.observableArray(locations);  //定义列表项数组
 		that.listclick = function(clickedlist) {
 			console.log(this);
@@ -73,21 +75,31 @@ function init() {
 				if (locations[i] === clickedlist) {
 					nmarkerClick(markers[i]);
 					break;
-				};
-			};
+				}
+			}
 		};
 		that.removeLC = function() {
 			that.locationlist.remove(this);
 			resetmarkers();
+			console.log(locations);
 		};
 		that.removeall = function() {
 			that.locationlist.removeAll();
+		};
+		that.shaixuan = function() {
+			for (let i = 0; i < locations.length; i++) {
+				if (locations[i].title.indexOf(that.query()) === -1) {
+					that.locationlist.remove(locations[i]);
+					i = 0;//不得已的办法 有什么更好的解决方法吗 需求是直接更改到locations数组的数据
+				}
+			}
+			resetmarkers();
 		};
 	};
 
 	function poipicker() {    //高德输入框选择api
 		AMapUI.loadUI(['misc/PoiPicker'], function(PoiPicker) {
-			var poiPicker = new PoiPicker({
+			let poiPicker = new PoiPicker({
 				city:'上海',
 				input: 'picker'
 			});
@@ -105,7 +117,7 @@ function init() {
 					location: poi.location,
 					address: poi.address
 				}
-				locations.push(newlocation);   //数据添加到数组,KO监控数组不更新列表栏
+				appModel.locationlist.push(newlocation);   //数据添加到数组,KO监控数组不更新列表栏
 				//console.log(locations);      //验证添加是没问题的
 				resetmarkers();
 				nmarkerClick(markers[markers.length-1]);
@@ -154,8 +166,8 @@ function init() {
 	};
 
 	function clearall() {   //删除所有标记
-		for (let i = 0; i < markers.length; i++) {
-			markers[i].setMap(null);
+		for (let marker of markers) {
+			marker.setMap(null);
 		};
 		markers = [];
 	};
@@ -171,5 +183,8 @@ function init() {
 	};
 
 	once();
-	ko.applyBindings(new ViewModel());
+
+	const appModel = new ViewModel();  //保存为对象
+	ko.applyBindings(appModel);
+
 };

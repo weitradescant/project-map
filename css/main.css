@@ -1,4 +1,4 @@
-body,html,#container {
+body,main,html,#container {
 	height: 100%;
 	margin: 0px;
 }
@@ -13,13 +13,13 @@ li span {
 }
 
 @media screen and (min-width: 900px) {
-	#picker {
+	input {
 		margin-left: 10px;
 		margin-top: 10px;
 		margin-right: 10px;
 	}
 
-	#inputbox {
+	.inputbox {
 		display: inline-block;
 	}
 
@@ -35,13 +35,13 @@ li span {
 		width: 70%;
 	}
 
-	#picker {
+	input {
 		margin-left: 20px;
 		margin-top: 20px;
 		margin-bottom: : 20px;
 	}
 
-	#inputbox {
+	.inputbox {
 		margin-top: 15px;
 		text-align: center;
 	}

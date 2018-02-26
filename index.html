@@ -10,11 +10,15 @@
  </head>
  <body>
  	<aside id="list">
- 		<input id="picker" placeholder="输入关键字选取地点">
- 		<div id="inputbox">
- 			<input data-bind="click: removeall" type="button" id="clearall" value="清空所有">
+ 		<input id="picker" placeholder="输入关键字搜索地点">
+ 		<div class="inputbox">
+ 			<input data-bind="click: removeall" type="button" id="clearall" value="清空所有标记">
  		</div>
  		<hr>
+ 		<input data-bind="textInput: query" type="text" placeholder="输入关键字筛选">
+ 		 <div class="inputbox">
+ 			<input data-bind="click: shaixuan" type="button" value="筛选">
+ 		</div>
  		<ul data-bind="foreach: locationlist">
  			<li>
  				<span data-bind="text: title, click: $parent.listclick"></span>
@@ -22,9 +26,10 @@
  			</li>
  		</ul>
  	</aside>
- 	<div id="container"></div>
-
-	<script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+ 	<main>
+ 		<div id="container"></div>	
+ 	</main>
+ 	<script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
 	<script src="script/app.js" type="text/javascript"></script>
  </body>
 </html>
