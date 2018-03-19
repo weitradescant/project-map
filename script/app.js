@@ -1,12 +1,5 @@
 $(function(){
 	let success = 0;
-	$.ajax({
-		url: "https://cdnjs.cloudflare.com/ajax/libs/knockout/3.4.2/knockout-min.js",  //异步加载KO
-		dataType: "script"
-	}).done(ifstart)
-	.fail(function() {
-		alert("加载knockoutJS失败");
-	});
 
 	$.ajax({
 		url: "http://webapi.amap.com/maps?v=1.4.4&key=22197708df30b23a9631ef14cab27c06", //异步加载高德地图
@@ -25,11 +18,11 @@ $(function(){
 	});
 
 	function ifstart() {
-		if (success === 2) {   //已加载完三个 开始执行
+		if (success === 1) {   //已加载完两个 开始执行
 			console.log("加载完成")
 			init();	
 		} else {
-			console.log("还剩" + (2 - success));//测试用
+			console.log("还剩" + (1 - success));//测试用
 			success++;
 		};
 	};
@@ -70,7 +63,6 @@ function init() {
 		that.query = ko.observable("");              //筛选框里输入的值
 		that.locationlist = ko.observableArray(locations);  //定义列表项数组
 		that.listclick = function(clickedlist) {
-			console.log(this);
 			for (let i = 0; i < locations.length; i++) {
 				if (locations[i] === clickedlist) {
 					nmarkerClick(markers[i]);
@@ -81,16 +73,14 @@ function init() {
 		that.removeLC = function() {
 			that.locationlist.remove(this);
 			resetmarkers();
-			console.log(locations);
 		};
 		that.removeall = function() {
 			that.locationlist.removeAll();
 		};
 		that.shaixuan = function() {
-			for (let i = 0; i < locations.length; i++) {
+			for (let i = locations.length - 1; i >= 0; i--) {
 				if (locations[i].title.indexOf(that.query()) === -1) {
-					that.locationlist.remove(locations[i]);
-					i = 0;//不得已的办法 有什么更好的解决方法吗 需求是直接更改到locations数组的数据
+					that.locationlist.remove(locations[i]);					
 				}
 			}
 			resetmarkers();
@@ -118,7 +108,6 @@ function init() {
 					address: poi.address
 				}
 				appModel.locationlist.push(newlocation);   //数据添加到数组,KO监控数组不更新列表栏
-				//console.log(locations);      //验证添加是没问题的
 				resetmarkers();
 				nmarkerClick(markers[markers.length-1]);
 			});
